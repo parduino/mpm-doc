@@ -2,73 +2,113 @@
 
 To compile the CB-Geo MPM code please make sure you have the following packages. The CB-Geo MPM code is written in C++14 and compiles successfully on GCC 8.x and Clang 6.x.
 
-## Prerequisites
-The following additional packages are required to compile the MPM code.
+### Prerequisite packages
+> The following prerequisite packages can be found in the docker image:
 
 * [Boost](http://www.boost.org/)
 * [Eigen](http://eigen.tuxfamily.org/)
-* [Intel TBB](https://www.threadingbuildingblocks.org/)
 * [HDF5](https://support.hdfgroup.org/HDF5/)
 
-### Optional
+#### Optional
+* [MKL](https://software.intel.com/en-us/mkl)
 * [MPI](https://www.open-mpi.org/)
+* [KaHIP](https://github.com/schulzchristian/KaHIP)
+* [OpenMP 5.0](https://www.openmp.org/specifications/)
+* [Partio](https://github.com/wdas/partio)
 * [VTK](https://www.vtk.org/)
 
-### Fedora (Recommended)
-> 28
+### Fedora installation
 
 Please run the following command:
 
 ```shell
-dnf install -y boost boost-devel clang cmake cppcheck eigen3-devel findutils gcc gcc-c++ \
-               git hdf5 hdf5-devel hdf5-openmpi hdf5-openmpi-devel kernel-devel lcov\
-               make openmpi openmpi-devel sqlite sqlite-devel tar tbb tbb-devel valgrind vim \
-               voro++ voro++-devel vtk vtk-devel wget
+dnf install -y boost boost-devel clang clang-analyzer clang-tools-extra cmake cppcheck dnf-plugins-core \
+                   eigen3-devel findutils freeglut freeglut-devel gcc gcc-c++ git hdf5 hdf5-devel \
+                   kernel-devel lcov libnsl make ninja-build openmpi openmpi-devel tar \
+                   valgrind vim vtk vtk-devel wget
 ```
 
-### Ubuntu 
-> 18.04
+### Ubuntu installation
 
-Please run the following commands to install any updates:
-
-```
-sudo apt-get update
-sudo apt-get upgrade
-
-sudo apt-get install 
-
-sudo apt-get autoremove
+Please run the following commands to install dependencies:
 
 ```
+sudo apt update
+sudo apt upgrade
+sudo apt install -y gcc git libboost-all-dev libeigen3-dev libhdf5-serial-dev libopenmpi-dev libomp-dev
+```
 
-To install dependencies
+If you are running Ubuntu 18.04 or below, you may want to update the GCC version to 9 to have OpenMP 5 specifications
+support.
+
+```
+sudo apt install software-properties-common
+sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+sudo apt install gcc-9 g++-9
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 90 --slave /usr/bin/g++ g++ /usr/bin/g++-9 --slave /usr/bin/gcov gcov /usr/bin/gcov-9
+
+```
+
+To install other dependencies:
+> CMake 3.15
+```
+sudo apt-get install software-properties-common
+sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main'
+sudo apt update
+sudo apt upgrade
+```
+
+> OpenGL and X11:Xt
+```
+sudo apt-get install freeglut3-dev libxt-dev
+```
+
+> VTK
+```
+git clone https://gitlab.kitware.com/vtk/vtk.git VTK
+cd VTK && mkdir build && cd build/
+cmake -DCMAKE_BUILD_TYPE:STRING=Release ..
+make -j
+sudo make install
+```
+
+### Partio for Houdini SFX Visualization
 
 ```shell
-sudo apt-get install -y cmake gcc git libboost-all-dev libeigen3-dev libhdf5-serial-dev libopenmpi-dev libtbb-dev libvtk7-dev
+sudo dnf install -y libnsl freeglut freeglut-devel
+mkdir -p ~/workspace && cd ~/workspace/ && git clone https://github.com/wdas/partio.git && \
+    cd partio && cmake . && make
 ```
 
-## Get the code
+Houdini supported (*.bgeo) files will be generated. These can be rendered using the non-commercial [Houdini Apprentice](https://www.sidefx.com/download/).
 
-* Download the `mpm` code repository using git clone.
+### KaHIP installation for domain decomposition
 
 ```shell
-git clone https://github.com/cb-geo/mpm
+cd ~/workspace/ && git clone https://github.com/schulzchristian/KaHIP && \
+   cd KaHIP && sh ./compile_withcmake.sh
 ```
 
 ## Compile
+> See https://mpm-doc.cb-geo.com/ for more detailed instructions. 
 
-0. Navigate to the `mpm` repository, which was just cloned (`cd mpm`). Then run `CMake` to create make files. `mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++ ..`. Here `..` refers to the path to the `CMakeLists.txt` file.
+0. Run `mkdir build && cd build && cmake -DCMAKE_CXX_COMPILER=g++ ..`.
 
 1. Run `make clean && make -jN` (where N is the number of cores).
 
-### Run tests
+> To compile without KaHIP partitioning use `cmake -DNO_KAHIP=True ..`
 
-0. Run `./mpmtest -s` (for a verbose output) or `ctest -VV`.
+### Compile mpm or mpmtest
 
+* To compile either `mpm` or `mpmtest` alone, run `make mpm -jN` or `make mpmtest -jN` (where N is the number of cores).
+
+### Compile without tests [Editing CMake options]
+
+To compile without tests run: `mkdir build && cd build && cmake -DMPM_BUILD_TESTING=Off  -DCMAKE_CXX_COMPILER=g++ ..`.
 
 ## Compile with MPI (Running on a cluster)
 
-The CB-Geo MPM code can be compiled with `MPI` to distribute the workload across compute nodes in a cluster.
+The CB-Geo mpm code can be compiled with `MPI` to distribute the workload across compute nodes in a cluster.
 
 Additional steps to load `OpenMPI` on Fedora:
 
@@ -78,26 +118,23 @@ export MODULEPATH=$MODULEPATH:/usr/share/modulefiles
 module load mpi/openmpi-x86_64
 ```
 
-Compile with OpenMPI:
+Compile with OpenMPI (with halo exchange):
 
 ```
 mkdir build && cd build 
 export CXX_COMPILER=mpicxx
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_EXPORT_COMPILE_COMMANDS=On ..
+cmake -DCMAKE_BUILD_TYPE=Release -DKAHIP_ROOT=~/workspace/KaHIP/ -DHALO_EXCHANGE=On ..
 make -jN
 ```
 
-### Run with MPI
+To enable halo exchange set `-DHALO_EXCHANGE=On` in `CMake`. Halo exchange is a better MPI communication protocol, however, use this only for larger number of MPI tasks (> 4).
 
-To run the CB-Geo MPM code on a cluster with MPI:
+### Compile with Ninja build system [Alternative to Make]
 
-```
-mpirun -N <#-MPI-tasks> ./mpm -f /path/to/input-dir/ -i mpm.json
-```
+0. Run `mkdir build && cd build && cmake -GNinja -DCMAKE_CXX_COMPILER=g++ ..`.
 
-For example to run the code on 4 compute nodes:
+1. Run `ninja`
 
-```
-mpirun -N 4 ./mpm -f ~/benchmarks/3d/uniaxial-stress -i mpm.json
-```
+### Compile with Partio viz support
 
+Please include `-DPARTIO_ROOT=/path/to/partio/` in the cmake command. A typical cmake command would look like `cmake -DCMAKE_BUILD_TYPE=Release -DPARTIO_ROOT=~/workspace/partio/ ..`

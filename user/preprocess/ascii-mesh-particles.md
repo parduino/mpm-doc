@@ -59,30 +59,6 @@ An example of a 3D mesh comprising of two cells and twelve nodes is shown below:
 1	8	9	2	5	10	11	6	# Cell 1
 ```
 
-### Velocity constraints
-
-Velocity constraints at each node can be specified in the following format:
-
-```
-n_0     d_1     v_1
-n_1     d_0     v_0
-...
-...
-n_i     d_1     v_1
-...
-...
-n_n     d_2     v_2
-```
-
-where, 
-
-`n_i` is the node number.
-
-`d_i` is the direction number `(0|1|2)` that corresponds to a cartesian direction, typically `(x|y|z)`.
-
-`v_i` is the specified velocity in direction `d_i`.
-
-
 ### Material points
 
 The material points file has the following format:
@@ -98,3 +74,14 @@ x_n	y_n	z_n
 ```
 
 $x_i$, $y_i$, $z_i$ correspond to the Cartesian coordinates of each material point. The material points are assigned a unique id from 0 to `n - 1`.
+
+The `particles-cell.txt` file which describes the initial cell location of each material point has the following format:
+```
+p_1	c_0
+p_1	c_1
+...
+p_i	c_i
+...
+p_n	c_n
+```
+where $p_i$ is the particle id and $c_i$ is the cell id where particle $p_i$ belongs.

@@ -10,12 +10,14 @@
   * Preprocess
     * [Input JSON](user/preprocess/input.md)
     * [ASCII Mesh/Particles](user/preprocess/ascii-mesh-particles.md)
+    * [Entity Sets](user/preprocess/entity-sets.md)
   * Run MPM
-    * [Usage](user/run/usage.md)
-    * HPCS
-	* [Lonestar 5](user/run/hpc/tacc.md)
+    * [Local](user/run/local.md)
+    * [TACC Lonestar 5](user/run/hpc/tacc-ls5.md)
   * Postprocess
     * [HDF5 data](user/postprocess/hdf5.md)
+    * [VTK](user/postprocess/vtk.md)
+    * [Rendering](user/postprocess/render.md)
   * Validation
     * Explicit
       * [Uniaxial stress](user/validation/explicit/uniaxial-stress/uniaxial-stress.md)
@@ -30,14 +32,21 @@
   * Geometry
     * [Rotation matrices](theory/geometry/rotation-matrices.md)
   * [MPM](theory/mpm.md)
-    * MPM Explicit
+    * [MPM Explicit](theory/mpm-explicit.md)
       * [Update Stress First](theory/usf.md)
       * [Update Stress Last](theory/usl.md)
   * Material
     * [Bingham](theory/material/bingham.md)
+    * [Newtonian](theory/material/newtonian.md)
+    * [MohrCoulomb](theory/material/mohr-coulomb.md)
+    * [ModifiedCamClay](theory/material/modified-cam-clay.md)
+    * [NorSand](theory/material/norsand.md)
 
+* Code
+  * [Overview](code/overview.md)
+  * [Material](code/material/material.md)
 
 * Developer
-
-  * [Overview](code/overview.md)
-  * [Material](code/material.md)
+  * [Getting started](developer/getting-started.md)
+  * [CB-Geo developer workflow](developer/workflow.md)
+  * [CB-Geo git guidelines](developer/git-guidelines.md)
